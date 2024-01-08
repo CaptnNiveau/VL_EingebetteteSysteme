@@ -40,10 +40,9 @@ gray: @mark(gray,@0)
 ** Fragen an die Veranstaltung**
 
 + Welche Funktionalität sollte eine ALU bereitstellen?
-+ Welcher Trade-Off ist mit der Entscheidung über die Wortbreite einer
-+ CPU und der Breite des möglichen OP-Codes verbunden?
++ Welcher Trade-Off ist mit der Entscheidung über die Wortbreite einer CPU und der Breite des möglichen OP-Codes verbunden?
 + Welche Register gehören zum Programmiermodell eines Rechners?
-+ Welche Register sind für das Laden der Programmbefehle erforderlich und wir arbeiten sie zusammen?
++ Welche Register sind für das Laden der Programmbefehle erforderlich und wie arbeiten sie zusammen?
 + Erklären Sie die Vorgänge in der Fetch- und Execute-Phase der Befehlsabarbeitung.
 
 --------------------------------------------------------------------
@@ -68,7 +67,7 @@ style="width: 80%; min-width: 420px; max-width: 720px;"
            +----------------------------+
 
            +----------------------------+
-  Ebene 3  | Istruktionsset             |     Maschinensprache
+  Ebene 3  | Instruktionsset            |     Maschinensprache
            +----------------------------+
 
            +----------------------------+  -.      ╔═══════════════╗
@@ -742,7 +741,7 @@ Oscillator           |---|   |   |   |                                          
 @endditaa
 ```
 
-### Realsierung der kombinatorischen Logik in der Kontrolleinheit
+### Realisierung der kombinatorischen Logik in der Kontrolleinheit
 
 ![Schaltung](./images/11_Modell_CPU/EinZyklusBefehle.png)<!-- width="80%" -->
 
@@ -934,7 +933,7 @@ Um die Sprünge zu realisieren werden dem Mikroprogrammwort neben der Folgeadres
 
 ![AdressierungsEinheit](./images/11_Modell_CPU/AdressierungsEinheit.png)<!-- width="60%" -->
 
-### Layout eines Programmes im Mikroprogammspeicher
+### Layout eines Programmes im Mikroprogrammspeicher
 
 Und wie sieht das nun konkret aus?
 
