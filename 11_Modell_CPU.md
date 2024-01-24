@@ -2,7 +2,7 @@
 
 author:   Sebastian Zug & André Dietrich & Fabian Bär
 email:    sebastian.zug@informatik.tu-freiberg.de & andre.dietrich@informatik.tu-freiberg.de & fabian.baer@student.tu-freiberg.de
-version:  0.0.5
+version:  0.0.6
 language: de
 narrator: Deutsch Female
 
@@ -271,11 +271,12 @@ else
 | Adresse  | Speicherinhalt    |                      Programmzeilen                      | Kommentar                                                       |
 |----------|-------------------|:--------------------------------------------------------:|-----------------------------------------------------------------|
 | 00010000 | $1001$ $10000001$ | `         LDA 10000001`<!-- style="white-space: pre;"--> | Lade den Wert von var aus dem Speicher $10000001$ in Register A |
-| 00010001 | $0001$ $10000010$ | `         JMA 00010011`<!-- style="white-space: pre;"--> | Wenn ein negativer Wert vorliegt, springe zu AddrIf             |
+| 00010001 | $0001$ $10000010$ | `Loop     JMA 00010011`<!-- style="white-space: pre;"--> | Wenn ein negativer Wert vorliegt, springe zu AddrIf             |
 | 00010010 | $0000$ $ -------$ | `         HLT         `<!-- style="white-space: pre;"--> | Stoppe die Abarbeitung                                          |
 | 00010011 | $1011$ $10000010$ | `AddrIf   ADD 10000010`<!-- style="white-space: pre;"--> | Inkrementiere A                                                 |
 | 00010100 | $0100$ $ -------$ | `         SWR         `<!-- style="white-space: pre;"--> | Zeige A auf dem LED Streifen an                                 |
 | 00011100 | $1010$ $10000011$ | `         STA 10000001`<!-- style="white-space: pre;"--> | Speichere A                                                     |
+| 00011100 | $0010$ $00010001$ | `         JMP 00010001`<!-- style="white-space: pre;"--> | Springe zu Loop  A                                                     |
 
 {{1}}
 <!-- data-type="none" -->
@@ -287,6 +288,7 @@ else
 | 00010011 | $101110000010$ |               |
 | 00010100 | $010000000000$ |               |
 | 00011100 | $101010000011$ |               |
+| 00011100 | $001000010001$ |               |
 | ...      |                |               |
 | 10000001 | $111111110110$ | int var = -10 |
 | 10000010 | $000000000001$ | Konstante 1   |
@@ -330,12 +332,11 @@ zu finden.
 @endditaa
 ```
 
-
 In einem Speicherzyklus muss der Prozessor zunächst eine Adresse liefern, die während des gesamten Speicherzyklus anliegen muss. Für einen Schreibzyklus betrifft dies auch das entsprechend abzulegende Datum. Bei einem Lesezyklus steht das gewünschte Wort erst mit einer gewissen Verzögerung an der Schnittstelle zur Verfügung. Da der Speicher sowohl zum Schreiben als auch zum Auslesen eines Wortes länger braucht als die Zeit, in der der Prozessor eine elementare Operation ausführen kann, sind zwei Pufferregister vorgesehen:
 
 1. Das Speicher-Adress-Register (MAR : Memory Address Register), in das die Adresse zu Beginn des Speicherzyklus geschrieben wird. In unserem Fall ist das MAR 12 Bit breit.
 
-2. Das Speicher-Puffer-Register (MBR : Memory Buffer Register). Bei einer Schreiboperation legt der Prozessor ein Datenwort hier ab, so dass es durch den (langsamen) Schreibvorgang im Speicher unter der Adresse abgespeichert wird, die im MAR spezifiziert ist. Beim Lesen stößt der Prozessor den Lesevorgang an und kann später das adressierte Wort aus dem MBR auslesen. Die Adresse ist bei uns 12 Bit breit. Wir können also 2^12 Adressen ansprechen, die jeweils 16 Bit Daten repräsentieren.
+2. Das Speicher-Puffer-Register (MBR : Memory Buffer Register). Bei einer Schreiboperation legt der Prozessor ein Datenwort hier ab, so dass es durch den (langsamen) Schreibvorgang im Speicher unter der Adresse abgespeichert wird, die im MAR spezifiziert ist. Beim Lesen stößt der Prozessor den Lesevorgang an und kann später das adressierte Wort aus dem MBR auslesen. Die Adresse ist bei uns 12 Bit breit. Wir können also $2^12$ Adressen ansprechen, die jeweils 16 Bit Daten repräsentieren.
 
 Durch MBR und MAR sind Prozessor und Speicher bezüglich ihrer Zykluszeiten weitgehend entkoppelt.
 
@@ -574,46 +575,10 @@ In der EX-Phase werden die arithmetisch/logischen Operationen, sowie Speicherbef
 | <!-- style="background-color: #898AE3;" --> $CP8$     |  |  |  |  |  | $MAR \leftarrow PC, SF \leftarrow F$ |  |  | @colspan(7) $ MAR \leftarrow PC, SF \leftarrow F$ |  |
 
 
-
 Der folgende Automat bildet die Abarbeitung der Instruktionen `HLT`, `JMP`, `JMA` und `JSR` in einem Automaten ab.
 
-```text @plantUML.png
-@startuml
-state "Memory read" as Fetch1 : MBR ← M[MAR]
-state "Wait for memory read" as Fetch2 : (wait)
-state "Increment PC" as Fetch3 : PC ← PC+1
-state "Instruction load" as Fetch4 : IR ← MBR
-state "Instruction decoding" as Fetch56 : (wait)
-state decodefork <<fork>>
-state "Hlt\n(Set Halt signal)" as Hlt : RF ← H
-state "Prepare for reading" as Wait : MAR ← PC
-state "Jmp to adress" as Jmp : PC ← IR_11-0
-state jmafork <<fork>> : Evaluate A_15
-state "Save PC" as Jsr1 : A ← PC_11-0
-state "Call Subprogram" as Jsr2 : MBR ← IR_11-0\nPC ← IR_11-0
-state "Reset\n" as Reset : PC ← 0x0000 \nMAR ← PC
+![](https://www.plantuml.com/plantuml/png/RLBDZjCm4BxxAKOzxO8gDMaBQBLRRQbOjHM1A4NYi5sjJ6DAmN4YnrdW0U32XMViap1sCfeIjPTuvllnUBxUravQrnHQuC4f62IgAErFi4hc0v0rt2ct-nB15IIlCpZ-_Wl9VJBF7eZ-KHuSV2uj5ETqCUeklYFbalWhixEgKCP1kc3U6AwmzlRuUHunkNQssRb3QK2NfyOJ5Ap2F7wkS_nSxShyOFQicRxeJnCu2gV_1jVN_ZERaTLIkwsvs2W7IwaTr8UzaVeoc264HjbTk7r9WjIgIbeLTk6NG5VZWZmTTzOzZmJheW9NWiojgkj0nGxlOPKzHj5mrB6_5lA_CP7tvadgncFpnsXAfXlvf6YpwzhwtERTlMo7l8NK6ZRDfygMUoiBuiUKCm-mDMS76cIgLhYYe0nd7dtqOuG_s9gJHulxPmym7CvQhcWLMFF_Qv56eYsu7uT-BDg2--FG7uksuFuaz2UYAx3FqICm5LHvXDCFu4l13OztEPSLtDp0yks7Fep1ClxkVNhyyskHlkgpVAP4MYTf7wPScJ8Nr6EvJzYZ4M4y08EZlhVFduqtcV0F8g50Pow25QSXl9GyOb_5f-YjCdbJw7y0)
 
-[*] --> Reset
-Reset --> Fetch1 : CP1
-Fetch1 --> Fetch2 : CP2
-Fetch2 --> Fetch3 : CP3
-Fetch3 --> Fetch4 : CP4
-Fetch4 --> Fetch56 : CP5
-Fetch56 --> decodefork : CP7
-decodefork --> Hlt : op == HLT
-decodefork --> Wait : op == NOP⋅CP8
-decodefork --> Jmp : op == JMP
-decodefork --> jmafork : op == JMA
-jmafork --> Jmp : A_15 == 1
-jmafork --> Wait : A_15 == 0
-decodefork --> Jsr1 : op == JSR
-Hlt --> Wait
-Jmp --> Wait
-Wait --> Fetch1
-Jsr1 --> Jsr2
-Jsr2 --> Fetch1
-@enduml
-```
 
 ## Umsetzung als Schaltnetz / Schaltwerk
 
